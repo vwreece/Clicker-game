@@ -1,93 +1,232 @@
-function globals() {
-	this.cash = 1;
+class Globals {
+	constructor() {
+		this.cash = 1;
+		this.enabledBuildings = [];
+		this.buildingTypes = [
+			"Camp",
+			"Hamlet",
+			"Village",
+			"Town",
+			"City",
+			"Metropolis"
+		];
+		this.buildings = {
+			"Camp": [],
+			"Hamlet": [],
+			"Village": [],
+			"Town": [],
+			"City": [],
+			"Metropolis": []
+		};
+		this.clickMultiplier = 1;
+	}
+
+	Display() {
+		let cashDisplay = document.getElementById("Gold");
+		cashDisplay.innerHTML = this.cash;
+	}
+	Update(){
+		
+		let increaseAmount = 0;
+		this.buildingTypes.forEach((buildingType) => {
+			let buildingInstance = eval('new ' + buildingType + '()');
+			increaseAmount += parseFloat(buildingInstance.multiplier * this.buildings[buildingType].length);
+		});
+		this.cash += increaseAmount;
+	}
+}
+
+class Building {
+	constructor() {
+		this.name = "";
+		this.multiplier = 1;
+		this.costMultiplier = 1;
+		this.cost = 1;
+	}
+
+	IncreaseCash() {
+		globalValues.cash += this.multiplier;
+	}
+}
+
+class Camp extends Building {
+	constructor() {
+		super();
+		this.name = "Camp";
+		this.cost = 1;
+		this.multiplier = 1;
+		this.costMultiplier = 1;
+	}
+}
+
+class Hamlet extends Building {
+	constructor() {
+		super();
+		this.name = "Hamlet";
+		this.cost = 100;
+		this.multiplier = 1;
+		this.costMultiplier = 3;
+	}
+}
+
+class Village extends Building {
+	constructor() {
+		super();
+		this.name = "Village";
+		this.cost = 1000;
+		this.multiplier = 1;
+		this.costMultiplier = 4;
+	}
+}
+
+class Town extends Building {
+	constructor() {
+		super();
+		this.name = "Town";
+		this.cost = 10000;
+		this.multiplier = 1;
+		this.costMultiplier = 5;
+	}
+}
+
+class City extends Building {
+	constructor() {
+		super();
+		this.name = "City";
+		this.cost = 100000;
+		this.multiplier = 1;
+		this.costMultiplier = 6;
+	}
+}
+
+class Metropolis extends Building {
+	constructor() {
+		super();
+		this.name = "Metropolis";
+		this.cost = 1000000;
+		this.multiplier = 1;
+		this.costMultiplier = 7;
+	}
+}
+
+function getSubClasses(baseClass){
+	let result = [];
+	let classes = Object.values(baseClass);
+	for(let i = 0; i < classes.length; i++){
+		if(classes[i].prototype instanceof baseClass){
+			result.push(classes[i]);
+		}
+	}
+	return result;
+}
+
+let globalValues = new Globals();
+
+const Increase = () => {
+	globalValues.cash += globalValues.clickMultiplier;
 };
 
-function camp() {
-	this.name = "";
-	this.multiplier = 1;
-	this.costMultiplier = 1.1;
-	this.cost = 1;
-};
+function BuyBuilding () {
+	let buildingType = this.id.replace("buy", "");
 
-function hamlet(){
-	this.name = "Hamlet";
-};
-
-hamlet.prototype = {
-	cost : 100,
-	multiplier : 2,
-	costMultiplier : 3
-};
-
-//buildings
-
-var camps = new Array();
-var hamlets = new Array();
-var globalValues = new globals();
-
-camp.prototype.IncreaseCash = function(cash) {
-	globals.cash+= multiplier;
-};
-
-globals.prototype.Update = function(){
-	var cashDisplay = document.getElementById("Gold");
-	cashDisplay.innerHTML = this.cash;
-};
-
-//This is the main function for the clicker itself that will increse the variable for the pointer clicker
-var Increase = function(){
-	globalValues.cash++;
-	globalValues.Update();
-};
-
-var BuyCamp = function(){
-	if (this.enabled === false)
+	if (!globalValues.enabledBuildings.includes(buildingType)){
+		console.log("Buying " + buildingType + " is disabled.");
 		return;
-	camps.push(new camp());
-	globalValues.cash -= (camps.length * 1.1);
-};
+	}
+	
 
-var BuyHamlet = function(){
-	console.log(this.enabled);
-	if (this.enabled === false)
-		return;
-	hamlets.push(new hamlet());
-	globalValues.cash -= (hamlet.prototype.cost + hamlets.length * hamlet.prototype.costMultiplier);
+	var building = null;
+	let amountOfBuildings = globalValues.buildings[buildingType].length;
+	switch(buildingType){
+		case "Camp": {
+			building = new Camp();
+			break;
+		}
+		case "Hamlet": { 
+			building = new Hamlet();
+			break;
+		}
+		case "Village": { 
+			building = new Village();
+			break;
+		}
+		case "Town": {
+			building = new Town();
+			break;
+		}
+		case "City": {
+			building = new City();
+			break;
+		}
+		case "Metropolis": { 
+			building = new Metropolis();
+			break;
+		}
+	}
 
-};
+	console.log(amountOfBuildings);
 
-var init = function(){
-	var buttonCampAdd = document.getElementById("buyCamp");
-	buttonCampAdd.onclick = BuyCamp;
-	var buttonHamletAdd = document.getElementById("buyHamlet");
-	buttonHamletAdd.onclick = BuyHamlet;
-};
+	let increaseMultiplier = parseFloat(amountOfBuildings * building.multiplier);
+	let cost = building.cost;
+	console.log(building);
 
-//Main update loop
-var UpdateLoop = function(){
-	var buttonCampAdd = document.getElementById("buyCamp");
-	var buttonHamletAdd = document.getElementById("buyHamlet");
-	if (globalValues.cash - (hamlet.prototype.cost + hamlets.length * hamlet.prototype.cost) < 0){
-		buttonHamletAdd.enabled = false;
+	if (globalValues.cash > building.cost + parseFloat(amountOfBuildings * building.costMultiplier))
+	{
+		globalValues.cash -= building.cost + parseFloat(amountOfBuildings * building.costMultiplier);
+		globalValues.buildings[buildingType].push(building);
 	}
 	else{
-		buttonHamletAdd.enabled = true;
+		console.log("Not enough cash to buy " + buildingType);
 	}
-	if (globalValues.cash - (camps.length * 1.1) < 0
-		){
-		buttonCampAdd.enabled = false;
-	}
-	else {
-		buttonCampAdd.enabled = true;
-	}
-	globalValues.cash += camps.length;
-	globalValues.cash += hamlets.length > 0 ? hamlets.length * hamlet.prototype.multiplier : 0;
-	console.log(hamlets.length);
-	globalValues.Update();
 };
 
-setInterval(function() {
+const init = () => {
+	globalValues.casg = 0;
+	globalValues.enabledBuildings.push("Camp");
+	let listOfBuildingTypes = [
+		"Camp",
+		"Hamlet",
+		"Village",
+		"Town",
+		"City",
+		"Metropolis"
+	];
+
+	listOfBuildingTypes.forEach((buildingType) => {
+		let buttonToAdd = document.getElementById("buy" + buildingType);
+		buttonToAdd.onclick = BuyBuilding;
+	});
+
+	console.log(window);
+};
+
+let elapsedSeconds = 0;
+const frameTime = 1000 / 60;
+
+const UpdateLoop = () => {
+	elapsedSeconds += frameTime;
+	let buttonCampAdd = document.getElementById("buyCamp");
+	let buttonHamletAdd = document.getElementById("buyHamlet");
+
+	//Update global loop.
+	if (elapsedSeconds >= 1000) {
+		elapsedSeconds = 0;
+		globalValues.cash += Camp.length;
+		globalValues.cash += Hamlet.length > 0 ? Hamlet.length * hamlet.prototype.multiplier : 0;
+		globalValues.Update();
+	}
+
+	globalValues.Display();
+	
+
+	//Check what is enabled.
+	buttonHamletAdd.enabled = globalValues.cash - (Hamlet.cost + Hamlet.length * Hamlet.cost) >= 0;
+	buttonCampAdd.enabled = globalValues.cash - Camp.length * 1 >= 0;
+	
+};
+
+setInterval(() => {
 	UpdateLoop();
-}, 1000);
+}, frameTime);
 
 init();
