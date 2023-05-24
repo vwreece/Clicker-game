@@ -1,0 +1,57 @@
+* {
+	margin:0;
+	padding: 0;
+}
+
+.typography{
+	font-family: "Verdana";
+	font-size: 12px;
+}
+
+#ResourceContainer{
+	padding: 5px 0px 0px 5px;
+	background:#ccc;
+}
+
+#Header{
+
+	background: skyblue;
+	color: white;
+	padding: 20px;
+	border-bottom: 1px solid darkblue;
+}
+
+#Left{
+	float:left;
+	width: 30%;
+}
+#Right{
+	float : right;
+	width: 70%;
+}
+
+#BuildingContainer table{
+	border-spacing: 0;
+}
+	#BuildingContainer table td{
+		border: 1px solid #333;
+			
+	}
+		#BuildingContainer table thead tr{
+			background: #e3e3e3;
+		}
+
+ul{
+	list-style: none;
+	display: block;
+	height:30px;
+}
+	ul li{
+		list-style: none;
+		display:  block;
+		clear: none;
+		float:left;
+		width: 40px;
+		height: 20px;
+		text-align: center;
+	}
