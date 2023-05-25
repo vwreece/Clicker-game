@@ -1,49 +1,42 @@
 <html>
-	<head>
-		<link type="text/css" href="style.css" rel="stylesheet"/>
-	</head>
-	<body class="typography">
-		<div id="Header">
-			<h1>Generic Clicker</h1>
-		</div>
-		<div id="ResourceContainer">
-			<ul id="ResourceList">
-				<li>Gold</li><li id="Gold"></li>
-			</ul>
-		</div>
-		
+
+<head>
+	<link type="text/css" href="style.css" rel="stylesheet" />
+</head>
+
+<body class="typography">
+	<div id="Header">
+		<h1>Population Idle</h1>
+	</div>
+	<div id="ResourceContainer">
+		<ul id="ResourceList">
+			<li>Gold</li>
+			<li id="Gold"></li>
+		</ul>
+	</div>
 		<div id="Left">
-			<button id="Increase" onclick="Increase();">Click here</button>
+			<div class="leftCenterContainer"><button id="Increase" class="button vertical-center">Click here</button>
+			</div>
 		</div>
 		<div id="Right">
 			<div id="BuildingContainer">
-				<table>
+				<table id="BuildingTable">
 					<thead>
-						<tr><td>Building Type</td><td>Count</td><td>Value</td><td>Cost</td><td>Buy</td></tr>
+						<tr>
+							<th>Building Type</th>
+							<th>Count</th>
+							<th>Value</th>
+							<th>Cost</th>
+							<th>Buy</th>
+						</tr>
 					</thead>
 					<tbody>
-						<tr>
-							<td>Camps</td><td>0</td><td>1</td><td>1</td><td><button id="buyCamp">Buy</button></td>
-						</tr>
-						<tr>
-							<td>Hamlet</td><td>0</td><td>100</td><td>100</td><td><button id="buyHamlet">Buy</button></td>
-						</tr>
-						<tr>
-							<td>Village</td><td>0</td><td>100</td><td>100</td><td><button id="buyVillage">Buy</button></td>
-						</tr>
-						<tr>
-							<td>Town</td><td>0</td><td>100</td><td>100</td><td><button id="buyTown">Buy</button></td>
-						</tr>
-						<tr>
-							<td>City</td><td>0</td><td>100</td><td>100</td><td><button id="buyCity">Buy</button></td>
-						</tr>
-						<tr>
-							<td>Metropolis</td><td>0</td><td>100</td><td>100</td><td><button id="buyMetropolis">Buy</button></td>
-						</tr>
 					</tbody>
 				</table>
 			</div>
 		</div>
-		<script type="text/javascript" src="mainGame.js"></script>
-	</body>
+
+	<script type="text/javascript" src="mainGame.js"></script>
+</body>
+
 </html>
