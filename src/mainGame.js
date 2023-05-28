@@ -179,17 +179,6 @@ class Metropolis extends Building {
 	}
 }
 
-function getSubClasses(baseClass){
-	let result = [];
-	let classes = Object.values(baseClass);
-	for(let i = 0; i < classes.length; i++){
-		if(classes[i].prototype instanceof baseClass){
-			result.push(classes[i]);
-		}
-	}
-	return result;
-}
-
 // Init();
 
 // setInterval(() => {
