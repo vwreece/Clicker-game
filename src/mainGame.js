@@ -109,6 +109,82 @@ class Globals {
 	}
 }
 
+class Save{
+	constructor(file){
+		const fileReader = new FileReader();
+		fileReader.onload = (event) => {
+			this.data = JSON.parse(event.target.result);
+			
+		};
+		fileReader.readAsText(file);
+		this.cash = 1;
+		this.buildings = {
+			"Camp": [],
+			"Hamlet": [],
+			"Village": [],
+			"Town": [],
+			"City": [],
+			"Metropolis": []
+		};
+	}
+}
+
+class Upgrade{
+	constructor(){
+		this.level = 0;
+		this.multiplier = 1;
+		this.incomeIncrease = 0;
+		this.name = "";
+		this.cost = 1;
+		this.category = "Main"
+	}
+}
+
+class ClickUpgrade extends Upgrade{
+	constructor(from){
+		super();
+		this.name = from.name;
+		this.multiplier = from.multiplier;
+		this.cost = from.cost;
+		this.incomeIncrease = from.incomeIncrease;
+	}
+}
+
+let upgrades = [
+	{
+		name : "Click Base Upgrade",
+		level : 1,
+		incomeIncrease : 2,
+		cost : 100,
+	},
+	{
+		name : "Click multiplier",
+		level : incomeIncrease,
+		cost :200,
+		incomeIncrease : 0,
+		multiplier : 1.1
+	}
+];
+
+class UpgradeManager{
+	constructor(){
+		this.upgrades = [];
+	}
+	AddUpgrade(upgrade){
+		//Check if we already have the upgrade
+		let upgradeIndex = this.upgrades.indexOf(upgrade);
+		if (upgradeIndex === -1){
+			this.upgrades.push(upgrade);
+		}		
+	}
+	RemoveUpgrade(upgrade){
+		let upgradeIndex = this.upgrades.indexOf(upgrade);
+		if (upgradeIndex !== -1){
+			this.upgrades.splice(upgradeIndex, 1);
+		}
+	}
+}
+
 class Building {
 	constructor() {
 		this.name = "";
@@ -190,6 +266,7 @@ class Metropolis extends Building {
 class Game {
 	constructor() {
 		this.globalValues = new Globals();
+		this.upgradeManager = new UpgradeManager();
 		this.elapsedSeconds = 0;
 		this.frameTime = 1000 / 60;
 	}
@@ -296,6 +373,21 @@ class Game {
 		else{
 			console.log("Not enough cash to buy " + buildingType);
 		}
+	}
+	BuyUpgrade (upgradeName) {
+		let upgrade = null;
+		switch(upgradeName){
+			case "ClickUpgrade": {
+				upgrade = new ClickUpgrade(); 
+				break;
+			}
+		}
+		this.globalValues.cash -= upgrade.cost;
+		this.upgradeManager.BuyUpgrade(upgrade);
+	}
+	LoadGame (file) {
+		let save = new Save(file);
+		save.Load();
 	}
 }
 
