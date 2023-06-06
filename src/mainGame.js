@@ -159,7 +159,7 @@ let upgrades = [
 	},
 	{
 		name : "Click multiplier",
-		level : incomeIncrease,
+		level : 1,
 		cost :200,
 		incomeIncrease : 0,
 		multiplier : 1.1
