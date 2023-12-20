@@ -1,22 +1,4 @@
-class HtmlElementFactory{
-	static CreateButton(id, text, onClick){
-		let button = document.createElement("button");
-		button.id = id;
-		button.innerHTML = text;
-		button.onclick = onClick;
-		return button;
-	}
-	static CreateTableRow(id){
-		let row = document.createElement("tr");
-		row.id = id;
-		return row;
-	}
-	static CreateTableColumn(text){
-		let column = document.createElement("td");
-		column.innerHTML = text;
-		return column;
-	}
-}
+import { HtmlElementFactory } from "./HtmlElementFactory.js";
 
 class Globals {
 	constructor() {
@@ -255,6 +237,30 @@ class Metropolis extends Building {
 	}
 }
 
+class BuildingUpgrade {
+    constructor() {
+        this.name = "BuildingUpgrade";
+        this.cost = 1000; // Set the cost of the upgrade
+        this.multiplier = 2; // Set the multiplier of the upgrade
+    }
+}
+
+class BuildingFactory {
+    createBuilding(type) {
+        switch(type) {
+            case "Camp": return new Camp();
+            case "Hamlet": return new Hamlet();
+            case "Village": return new Village();
+            case "Town": return new Town();
+            case "City": return new City();
+            case "Metropolis": return new Metropolis();
+            case "Kingdom": return new Kingdom();
+            case "Empire": return new Empire();
+            default: throw new Error(`Invalid building type: ${type}`);
+        }
+    }
+}
+
 // Init();
 
 // setInterval(() => {
@@ -267,6 +273,7 @@ class Game {
 	constructor() {
 		this.globalValues = new Globals();
 		this.upgradeManager = new UpgradeManager();
+		this.buildingFactory = new BuildingFactory();
 		this.elapsedSeconds = 0;
 		this.frameTime = 1000 / 60;
 	}
@@ -334,34 +341,9 @@ class Game {
 		}	
 	
 		var building = null;
-		let amountOfBuildings = this.globalValues.buildings[buildingType].length;
-		switch(buildingType){
-			case "Camp": {
-				building = new Camp();
-				break;
-			}
-			case "Hamlet": { 
-				building = new Hamlet();
-				break;
-			}
-			case "Village": { 
-				building = new Village();
-				break;
-			}
-			case "Town": {
-				building = new Town();
-				break;
-			}
-			case "City": {
-				building = new City();
-				break;
-			}
-			case "Metropolis": { 
-				building = new Metropolis();
-				break;
-			}
-		}
+		building = this.buildingFactory.createBuilding(buildingType);
 	
+		let amountOfBuildings = this.globalValues.buildings[buildingType].length;
 		let increaseMultiplier = parseFloat(amountOfBuildings * building.multiplier);
 		let cost = building.cost;
 	
@@ -381,9 +363,17 @@ class Game {
 				upgrade = new ClickUpgrade(); 
 				break;
 			}
+			case "BuildingUpgrade": {
+				upgrade = new BuildingUpgrade();
+				break;
+			}
 		}
-		this.globalValues.cash -= upgrade.cost;
-		this.upgradeManager.BuyUpgrade(upgrade);
+		if (this.globalValues.cash >= upgrade.cost) {
+			this.globalValues.cash -= upgrade.cost;
+			this.upgradeManager.BuyUpgrade(upgrade);
+		} else {
+			console.log("Not enough cash to buy " + upgradeName);
+		}
 	}
 	LoadGame (file) {
 		let save = new Save(file);
@@ -394,3 +384,6 @@ class Game {
 let game = new Game();
 game.Init();
 game.Run();
+
+
+

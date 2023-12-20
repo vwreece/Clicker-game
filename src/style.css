@@ -10,7 +10,7 @@
 
 .typography{
 	font-family: "Verdana";
-	font-size: 12px;
+	font-size: 15px;
 }
 
 #ResourceContainer{
@@ -70,15 +70,29 @@
 	border: 1px solid black;
 }
 #Right{
-	float : right;
 	width: 50%;
 	background-image: url("images/demo06_PixelSky_1920x1080.png");
 	background-size: auto;
+	flex-direction: column;
+	flex-wrap: nowrap;
+	display: flex;
 }
 
 #FarRight{
-	float: right;
 	width: 22%;
+	background-image: url("images/CloudSky.jpg");
+	padding: 5px;
+}
+
+
+#UpgradeContainer{
+	background-image: url("images/woodtextureTest.jpg");
+	float:left;
+	width: 100%;
+	color: white;
+	font-weight: bold;
+	min-height: 200px;
+	position: relative;
 }
 
 #MiddleRight{
@@ -160,7 +174,7 @@ ul{
 	flex-wrap:nowrap;
 	float: left;
 	width: 100%;
-	height: 90%;
+	height: 100%;
 }
 
 .headerContainer{
@@ -169,4 +183,9 @@ ul{
 	flex-wrap:nowrap;
 	float: left;
 	width: 100%;
+}
+
+#planetView{
+	width: 100%;
+	height: 100%;
 }
