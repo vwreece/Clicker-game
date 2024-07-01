@@ -20,7 +20,7 @@ class Globals {
 			"City": [],
 			"Metropolis": []
 		};
-		this.clickMultiplier = 100;
+		this.clickMultiplier = 1;
 	}
 
 	Display() {
@@ -38,7 +38,7 @@ class Globals {
 			let buildingInstance = eval('new ' + buildingType + '()');
 			buildingValue.innerHTML = buildingInstance.multiplier * this.buildings[buildingType].length;
 			let buildingCost = buildingRow.querySelector(".BuildingCost");
-			buildingCost.innerHTML = parseFloat(buildingInstance.cost) * (this.buildings[buildingType].length + 1);
+			buildingCost.innerHTML = parseFloat(buildingInstance.cost) * (this.buildings[buildingType].length + 1) * buildingInstance.costMultiplier;
 		});
 	}
 	Update(elapsedSeconds){
@@ -183,7 +183,7 @@ class Camp extends Building {
 		this.name = "Camp";
 		this.cost = 1;
 		this.multiplier = 1;
-		this.costMultiplier = 1;
+		this.costMultiplier = 2;
 	}
 }
 
@@ -347,9 +347,9 @@ class Game {
 		let increaseMultiplier = parseFloat(amountOfBuildings * building.multiplier);
 		let cost = building.cost;
 	
-		if (this.globalValues.cash >= building.cost + parseFloat(amountOfBuildings * building.costMultiplier))
+		if (this.globalValues.cash >= building.cost * parseFloat((amountOfBuildings + 1) * building.costMultiplier))
 		{
-			this.globalValues.cash -= building.cost + parseFloat(amountOfBuildings * building.costMultiplier);
+			this.globalValues.cash -= building.cost * parseFloat((amountOfBuildings + 1) * building.costMultiplier);
 			this.globalValues.buildings[buildingType].push(building);
 		}
 		else{
