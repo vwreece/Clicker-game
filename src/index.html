@@ -95,8 +95,28 @@
 			scene.background = new THREE.TextureLoader().load('./images/spaceBack.jpg');
 
 			 // Add a light source
-			 var light = new THREE.DirectionalLight(0xffffff, 1);
-			light.position.set(1, 1, 1); // position the light to shine from top-right
+			var light = new THREE.DirectionalLight(0xffffff, 1);
+			var angle = 0;
+
+			var lightXPosition = 0;
+			var lightZPosition = 0;
+			setInterval(function(){
+				angle += 1;
+				angle = angle > 360 ? 0 : angle;
+				var rads = angle * (Math.PI / 180)
+				console.log(angle);
+				var cosx = Math.cos(rads);
+				var sinx = Math.sin(rads);
+				var cosz = Math.cos(rads);
+				var sinz = Math.sin(rads);
+
+				var newXPosition = Math.cos(rads) - Math.sin(rads);
+				var newZPosition = Math.sin(rads) + Math.cos(rads);
+
+				light.position.x = 5*newXPosition;
+				light.position.z = 5*newZPosition; 
+			},1000/16);
+			light.position.set(2, 0, 2); // position the light to shine from top-right
 			light.castShadow = true; // make the light cast shadows
 			light.shadow.camera.near = 0.5; // default
 			light.shadow.camera.far = 500;  // default

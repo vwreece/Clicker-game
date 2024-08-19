@@ -25,7 +25,7 @@ class Globals {
 
 	Display() {
 		let cashDisplay = document.getElementById("Gold");
-		cashDisplay.innerHTML = this.cash;
+		cashDisplay.innerHTML = this.cash.toFixed(2);
 		
 		let table = document.getElementById("BuildingTable");
 		this.buildingTypes.forEach((buildingType) => {
@@ -41,18 +41,17 @@ class Globals {
 			buildingCost.innerHTML = parseFloat(buildingInstance.cost) * (this.buildings[buildingType].length + 1) * buildingInstance.costMultiplier;
 		});
 	}
-	Update(elapsedSeconds){
+	Update(frameTime){
 		
 		let increaseAmount = 0;
-		if (elapsedSeconds >= 1000){
-			this.buildingTypes.forEach((buildingType) => {
-				let buildingInstance = eval('new ' + buildingType + '()');
-				increaseAmount += parseFloat(buildingInstance.multiplier * this.buildings[buildingType].length);
-			});
-		}
+		this.buildingTypes.forEach((buildingType) => {
+			let buildingInstance = eval('new ' + buildingType + '()');
+			increaseAmount += parseFloat(buildingInstance.multiplier * this.buildings[buildingType].length);
+		});
+		
 
 		this.CheckEnabled();
-		this.cash += increaseAmount;
+		this.cash += increaseAmount / frameTime;
 	}
 	CheckEnabled(){
 		this.buildingTypes.forEach((buildingType) => {
@@ -293,8 +292,7 @@ class Game {
 	Update(){
 		this.elapsedSeconds += this.frameTime;
 		
-		this.globalValues.Update(this.elapsedSeconds);
-		
+		this.globalValues.Update(this.frameTime);
 		if (this.elapsedSeconds >= 1000){
 			this.elapsedSeconds = 0;
 		}
