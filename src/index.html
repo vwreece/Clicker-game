@@ -44,11 +44,6 @@
 					</tbody>
 				</table>
 			</div>
-			<div id="canvasContainer">
-				<canvas id="planetView">
-					
-				</canvas>
-			</div>
 		</div>
 		<div id="MiddleRight"></div>
 		<div id="FarRight">
@@ -60,83 +55,6 @@
 		
 
 	<script type="module" src="mainGame.js"></script>
-	<script>
-		window.onload = function(){
-			// Create a scene
-			var scene = new THREE.Scene();
-					
-			let canvasRenderer = document.getElementById("planetView");
-
-			// Create a camera
-			var camera = new THREE.PerspectiveCamera(75, canvasRenderer.offsetWidth / canvasRenderer.offsetHeight, 0.1, 1000);
-			camera.position.z = 2;
-		
-			// Create a renderer
-			var renderer = new THREE.WebGLRenderer( { canvas: canvasRenderer } );
-			renderer.setSize(canvasRenderer.offsetWidth, canvasRenderer.offsetHeight);
-			renderer.shadowMap.enabled = true; // enable shadows in the renderer
-			document.getElementById('canvasContainer').appendChild(renderer.domElement);
-		
-			// Create a geometry
-			var geometry = new THREE.SphereGeometry(0.5, 32, 32);
-		
-			// Create a material
-			var material = new THREE.MeshPhongMaterial();
-			material.map = new THREE.TextureLoader().load('./images/Terrestrial1.png');
-		
-			// Create a mesh
-			var globe = new THREE.Mesh(geometry, material);
-			globe.castShadow = true; // the globe casts shadows
-    		globe.receiveShadow = true; 
-		
-			// Add the globe to the scene
-			scene.add(globe);
-
-			scene.background = new THREE.TextureLoader().load('./images/spaceBack.jpg');
-
-			 // Add a light source
-			var light = new THREE.DirectionalLight(0xffffff, 1);
-			var angle = 0;
-
-			var lightXPosition = 0;
-			var lightZPosition = 0;
-			setInterval(function(){
-				angle += 1;
-				angle = angle > 360 ? 0 : angle;
-				var rads = angle * (Math.PI / 180)
-				console.log(angle);
-				var cosx = Math.cos(rads);
-				var sinx = Math.sin(rads);
-				var cosz = Math.cos(rads);
-				var sinz = Math.sin(rads);
-
-				var newXPosition = Math.cos(rads) - Math.sin(rads);
-				var newZPosition = Math.sin(rads) + Math.cos(rads);
-
-				light.position.x = 5*newXPosition;
-				light.position.z = 5*newZPosition; 
-			},1000/16);
-			light.position.set(2, 0, 2); // position the light to shine from top-right
-			light.castShadow = true; // make the light cast shadows
-			light.shadow.camera.near = 0.5; // default
-			light.shadow.camera.far = 500;  // default
-			scene.add(light);
-		
-			// Animation
-			function animate() {
-				requestAnimationFrame(animate);
-		
-				// Rotate the globe
-				globe.rotation.y += 0.001;
-		
-				// Render the scene
-				renderer.render(scene, camera);
-			}
-		
-			animate();
-		}
-		
-	</script>
 </body>
 
 </html>
