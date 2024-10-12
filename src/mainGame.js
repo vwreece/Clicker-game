@@ -1,99 +1,6 @@
 import { HtmlElementFactory } from "./HtmlElementFactory.js";
 
 
-
-
-
-class Globals {
-	constructor(dataFile) {
-		this.cash = 1;
-		this.enabledBuildings = [];
-		this.clickMultiplier = 1;
-		this.buildingTypes = dataFile.Buildings.map(x => new BuildingType(x));
-		//TODO:Better structure to manage instances of buildings etc.
-		this.buildingCounts = this.buildingTypes.map(x => { return { 
-			name : x.name, 
-			count : 0,
-			costMultiplier : x.costMultiplier,
-			multiplier : 1
-		}});
-		this.buildingCounts.getByName = function(nameParam){
-			return this.find(x => x.name == nameParam);
-		};
-		this.buildingTypes.getByName = function(nameParam){
-			return this.find(x => x.name == nameParam);
-		};
-		console.log(this.buildingCounts);
-	}
-
-	Display() {
-		let cashDisplay = document.getElementById("Gold");
-		cashDisplay.innerHTML = this.cash.toFixed(2);
-		
-		let table = document.getElementById("BuildingTable");
-		this.buildingTypes.forEach((buildingType) => {
-			let buildingRow = table.querySelector("#BuildingRow" + buildingType.name);
-			let buildingInstance = this.buildingCounts.getByName(buildingType.name);
-
-			let buildingCount = buildingRow.querySelector(".BuildingCount");
-			buildingCount.innerHTML = buildingInstance.count;
-			let buildingValue = buildingRow.querySelector(".BuildingValue");
-			buildingValue.innerHTML = buildingInstance.multiplier * buildingInstance.count;
-			let buildingCost = buildingRow.querySelector(".BuildingCost");
-			buildingCost.innerHTML = parseFloat(buildingType.cost) * (buildingInstance.count + 1) * buildingInstance.costMultiplier;
-		});
-	}
-	Update(frameTime){
-		
-		let increaseAmount = 0;
-		
-		this.buildingTypes.forEach((buildingType) => {
-			var buildingToSum = this.buildingCounts.find( x => x.name == buildingType.name);
-			if (buildingToSum == null)
-				throw Exception("No matching buiding count for building type.");
-
-			increaseAmount += parseFloat(buildingToSum.multiplier * buildingToSum.count);
-		});
-
-		this.CheckEnabled();
-		this.cash += increaseAmount / frameTime;
-	}
-	CheckEnabled(){
-		this.buildingTypes.forEach((buildingType) => {
-			let indexOfTest = this.buildingTypes.indexOf(buildingType);
-			let previousBuildingType = this.buildingTypes[indexOfTest - 1];
-			if (previousBuildingType !== undefined){
-				let previousBuildingInstance  = this.buildingCounts.find(x => x.name == previousBuildingType.name);
-				if (previousBuildingInstance.count >= previousBuildingType.prevBuildingThreshold){
-					try{
-						let add = false;
-						if (this.enabledBuildings.includes(buildingType.name) === false) {
-							add = true;
-						}
-						if (add){
-							this.enabledBuildings.push(buildingType.name);
-						}
-					}
-					catch(Exception){
-						debugger;
-					}
-				}
-			}
-			//Check if we are able to buy the building
-			let table = document.getElementById("BuildingTable");
-			let buildingRow = table.querySelector("#BuildingRow" + buildingType.name);
-			if (this.enabledBuildings.includes(buildingType.name)){
-				buildingRow.querySelector("#buy" + buildingType.name).disabled = false;
-			}
-			else{
-				buildingRow.querySelector("#buy" + buildingType.name).disabled = true;
-			}
-			//Disable the button if we can't afford it
-
-		});
-	}
-}
-
 class Save{
 	constructor(file){
 		const fileReader = new FileReader();
@@ -127,6 +34,27 @@ class ClickUpgrade extends Upgrade{
 	}
 }
 
+class GlobalManager {
+	constructor(){
+		this.cash = 0;
+		this.clickMultiplier = 1;
+	}
+	Update(gameTime){
+
+	}
+	Increase(cash){
+		this.cash += cash;
+	}
+	Click(){
+		this.cash += this.clickMultiplier;
+	}
+	Decrease(amount){
+		this.cash -= amount;
+	}
+	CanAfford(amount){
+		return this.cash > amount;
+	}
+}
 
 class UpgradeManager{
 	constructor(){
@@ -145,6 +73,9 @@ class UpgradeManager{
 			this.upgrades.splice(upgradeIndex, 1);
 		}
 	}
+	Update(gameTime){
+
+	}
 }
 
 class BuildingType {
@@ -156,8 +87,23 @@ class BuildingType {
 	}
 }
 
+//TODO:instead of constructor maybe create a separate create/init method so that we can build from a "saved" or serialized instance perahps.
 class BuildingInstance {
-	
+	constructor(buildingDefinition){
+		this.name = buildingDefinition.name;
+		this.count = 0;
+		this.costMultiplier = buildingDefinition.costMultiplier;
+		this.multiplier = 1;
+	}
+	CalculateIncrease(){
+		return parseFloat(this.multiplier * this.count);
+	}
+	IncreaseBuilding(amount = 1){
+		this.count += amount;
+	}
+	NextIncrementCost(){
+		return parseFloat((this.count + 1) * this.costMultiplier);
+	}
 }
 
 class BuildingUpgrade {
@@ -169,9 +115,79 @@ class BuildingUpgrade {
 }
 
 class BuildingManager {
-	constructor(){
-		this.buildingTypes;
-		this.buildingInstances;
+	constructor(dataFileBuildings){
+		this.buildingTypes = dataFileBuildings.map(x => new BuildingType(x));;
+		this.buildingInstances = this.buildingTypes.map(x => new BuildingInstance(x));
+		this.enabledBuildings = [];
+		this.enabledBuildings.push("Camp");
+	}
+	GetDefinitionByName(nameParam){
+		return this.buildingTypes.find(x => x.name == nameParam);
+	}
+	GetInstanceByName(nameParam){
+		return this.buildingInstances.find(x => x.name == nameParam);
+	}
+	//private check enabled. I want the element stuff out of here. 
+	#CheckEnabled(){
+		this.buildingTypes.forEach((buildingType, index) => {
+			let previousBuildingType = this.buildingTypes[index - 1];
+			if (previousBuildingType !== undefined){
+				let previousBuildingInstance  = this.buildingInstances.find(x => x.name == previousBuildingType.name);
+				if (previousBuildingInstance.count >= previousBuildingType.prevBuildingThreshold){
+					try{
+						let add = false;
+						if (this.enabledBuildings.includes(buildingType.name) === false) {
+							add = true;
+						}
+						if (add){
+							this.enabledBuildings.push(buildingType.name);
+						}
+					}
+					catch(Exception){
+						console.log("Something went wrong when trying to check an enabled building.")
+					}
+				}
+			}
+			//Check if we are able to buy the building
+			let table = document.getElementById("BuildingTable");
+			let buildingRow = table.querySelector("#BuildingRow" + buildingType.name);
+			if (this.enabledBuildings.includes(buildingType.name)){
+				buildingRow.querySelector("#buy" + buildingType.name).disabled = false;
+			}
+			else{
+				buildingRow.querySelector("#buy" + buildingType.name).disabled = true;
+			}
+			//Disable the button if we can't afford it
+
+		});
+	}
+	GetIncreaseAmount(){
+		let increaseAmount = 0;
+		
+		this.buildingInstances.forEach((buildingInstance) => {
+			increaseAmount += buildingInstance.CalculateIncrease();
+		});
+		return increaseAmount;
+	}
+	CostToIncrement(buildingTypeName){
+		let building = this.GetInstanceByName(buildingTypeName);
+		return building.NextIncrementCost();
+	}
+	Update(gameTime){
+		this.#CheckEnabled();
+	}
+	IsBuildingTypeEnabled(buildingType){
+		return this.enabledBuildings.find(x => x == buildingType) == buildingType;
+	}
+	CanBuyBuilding(name){
+		return name != "" && name != null && this.IsBuildingTypeEnabled(name);
+	}
+	AddBuildingInstance(name){
+		if (!this.CanBuyBuilding(name)){
+			throw Exception("Invalid building type");
+		}
+		
+		this.GetInstanceByName(name).IncreaseBuilding();
 	}
 }
 
@@ -192,13 +208,13 @@ class Game {
 		//Load the datafile configuration. 
 		const response = await fetch('./data.json');
 		const localDataFile = await response.json();
-		this.globalValues = new Globals(localDataFile);
 
-		this.globalValues.cash = 0;
-		this.globalValues.enabledBuildings.push("Camp");
+		this.BuildingManager = new BuildingManager(localDataFile.Buildings);
+		this.GlobalManager = new GlobalManager();
+
 		this.CreateInitialHtml();
 		const mainClickButton = document.getElementById("Increase");
-		mainClickButton.onclick = () => {this.ClickIncrease();};
+		mainClickButton.onclick = () => {this.GlobalManager.Click()};
 		return this;
 	}
 	Run(){
@@ -209,20 +225,39 @@ class Game {
 	}
 	Update(){
 		this.elapsedSeconds += this.frameTime;
+
+		this.BuildingManager.Update(this.elapsedSeconds);
 		
-		this.globalValues.Update(this.frameTime);
+		let increaseAmount = this.BuildingManager.GetIncreaseAmount();
+		this.GlobalManager.Increase(increaseAmount / this.frameTime);
+		
 		if (this.elapsedSeconds >= 1000){
 			this.elapsedSeconds = 0;
 		}
 	}
 	Draw(){
-		this.globalValues.Display();
+		let cashDisplay = document.getElementById("Gold");
+		
+		cashDisplay.innerHTML = this.GlobalManager.cash.toFixed(2);
+		
+		let table = document.getElementById("BuildingTable");
+		this.BuildingManager.buildingTypes.forEach((buildingType) => {
+			let buildingRow = table.querySelector("#BuildingRow" + buildingType.name);
+			let buildingInstance = this.BuildingManager.GetInstanceByName(buildingType.name);
+
+			let buildingCount = buildingRow.querySelector(".BuildingCount");
+			buildingCount.innerHTML = buildingInstance.count;
+			let buildingValue = buildingRow.querySelector(".BuildingValue");
+			buildingValue.innerHTML = buildingInstance.multiplier * buildingInstance.count;
+			let buildingCost = buildingRow.querySelector(".BuildingCost");
+			buildingCost.innerHTML = parseFloat(buildingType.cost) * (buildingInstance.count + 1) * buildingInstance.costMultiplier;
+		});
 	}
 	CreateInitialHtml () {
 		//TODO: Am still a little sketch on building the elements like this.
 		let table = document.getElementById("BuildingTable");
 	
-		this.globalValues.buildingTypes.forEach((buildingType) => {
+		this.BuildingManager.buildingTypes.forEach((buildingType) => {
 			let tableRow = HtmlElementFactory.CreateTableRow("BuildingRow" + buildingType.name);
 			let buildingTypeName = HtmlElementFactory.CreateTableColumn(buildingType.name);
 			let buildingCount = HtmlElementFactory.CreateTableColumn("0");
@@ -249,29 +284,17 @@ class Game {
 		});
 	}
 	ClickIncrease() {
-		this.globalValues.cash += this.globalValues.clickMultiplier;
+		this.GlobalManager.Click();
 	}
 	BuyBuilding (buildingTypeName) {
-		if (!this.globalValues.enabledBuildings.includes(buildingTypeName)){
+		let buildingCost = this.BuildingManager.CostToIncrement(buildingTypeName);
+		let canBuybuilding = this.BuildingManager.CanBuyBuilding(buildingTypeName);
+		debugger;
+		if (canBuybuilding && this.GlobalManager.CanAfford(buildingCost)){
+			this.BuildingManager.AddBuildingInstance(buildingTypeName);
 			return;
 		}	
-	
-		let building = this.globalValues.buildingCounts.getByName(buildingTypeName);
-		let buildingType = this.globalValues.buildingTypes.getByName(buildingTypeName);
-		let amountOfBuildings = building.count;
-		//TODO: Need to fix this buy centralizing how to fetch cost 
-		let costMultiplier = parseFloat((amountOfBuildings + 1) * building.costMultiplier);
-		let cost = buildingType.cost;
-		debugger;
-		let checkIfCanBuy = this.globalValues.cash >= cost * costMultiplier;
-		if (checkIfCanBuy)
-		{
-			this.globalValues.cash -= cost * costMultiplier;
-			building.count++;
-		}
-		else{
-			console.log("Not enough cash to buy " + buildingType.name);
-		}
+		console.log("Can't afford building");
 	}
 	BuyUpgrade (upgradeName) {
 		let upgrade = null;

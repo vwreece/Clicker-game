@@ -29,8 +29,7 @@
 }
 
 #Header{
-	background: rgb(48, 49, 123);
-	background-image: url(images/SkyTexture.png);
+	background: rgb(31, 32, 81);
 	color: white;
 	border-bottom: 1px solid rgb(2, 0, 32);
 	float: left;
