@@ -6,6 +6,10 @@ export class HtmlElementFactory {
 		button.onclick = onClick;
 		return button;
 	}
+	static BindClick(id, eventType, event){
+		let element = document.getElementById(id);
+		element.addEventListener(eventType, event);
+	}
 	static CreateTableRow(id) {
 		let row = document.createElement("tr");
 		row.id = id;
@@ -16,4 +20,5 @@ export class HtmlElementFactory {
 		column.innerHTML = text;
 		return column;
 	}
+
 }

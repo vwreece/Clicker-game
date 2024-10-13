@@ -191,12 +191,69 @@ class BuildingManager {
 	}
 }
 
-// Init();
+class UIManager
+{
+	constructor(){
 
-// setInterval(() => {
-// 	UpdateLoop();
-// }, frameTime);
+	}
+	Init(BuildingManager){
+		this.GenerateBuildingsTable(BuildingManager);
+	}
+	GenerateBuildingsTable(BuildingManager){
+		//TODO:Still sketched tf out. Maybe react or some shit?
+		//TODO:Binding an event an issue. 
+		let table = document.getElementById("BuildingTable");
+	
+		BuildingManager.buildingTypes.forEach((buildingType) => {
+			let tableRow = HtmlElementFactory.CreateTableRow("BuildingRow" + buildingType.name);
+			let buildingTypeName = HtmlElementFactory.CreateTableColumn(buildingType.name);
+			let buildingCount = HtmlElementFactory.CreateTableColumn("0");
+			buildingCount.classList.add("BuildingCount");
+			let buildingValue = HtmlElementFactory.CreateTableColumn("0");
+			buildingValue.classList.add("BuildingValue");
+			let buildingCost = HtmlElementFactory.CreateTableColumn("0");
+			buildingCost.classList.add("BuildingCost");
+			let buildingButton = HtmlElementFactory.CreateButton("buy" + buildingType.name,"Buy", () => {
+				debugger;
+				BuildingManager.BuyBuilding(buildingType.name);
+			});
+			buildingButton.classList.add("button");
+			buildingButton.setAttribute("disabled","");
+			let buildingActionContainer = HtmlElementFactory.CreateTableColumn("");
+			buildingActionContainer.classList.add("BuildingActionContainer");
+			buildingActionContainer.appendChild(buildingButton);
+	
+			tableRow.appendChild(buildingTypeName);
+			tableRow.appendChild(buildingCount);
+			tableRow.appendChild(buildingValue);
+			tableRow.appendChild(buildingCost);
+			tableRow.appendChild(buildingActionContainer);
+			table.querySelector("tbody").appendChild(tableRow);
+		});
+	}
+	DrawScoreSection(GlobalManager){
+		let cashDisplay = document.getElementById("Gold");
+		cashDisplay.innerHTML = GlobalManager.cash.toFixed(2);
+	}
+	DrawBuildingTable(BuildingManager){
+		let table = document.getElementById("BuildingTable");
+		BuildingManager.buildingTypes.forEach((buildingType) => {
+			let buildingRow = table.querySelector("#BuildingRow" + buildingType.name);
+			let buildingInstance = BuildingManager.GetInstanceByName(buildingType.name);
 
+			let buildingCount = buildingRow.querySelector(".BuildingCount");
+			buildingCount.innerHTML = buildingInstance.count;
+			let buildingValue = buildingRow.querySelector(".BuildingValue");
+			buildingValue.innerHTML = buildingInstance.multiplier * buildingInstance.count;
+			let buildingCost = buildingRow.querySelector(".BuildingCost");
+			buildingCost.innerHTML = parseFloat(buildingType.cost) * (buildingInstance.count + 1) * buildingInstance.costMultiplier;
+		});
+	}
+	Draw(BuildingManager, GlobalManager){
+		this.DrawScoreSection(GlobalManager);
+		this.DrawBuildingTable(BuildingManager);
+	}
+} 
 
 //TODO: I think instead of loading the datafiles on the globals create a building and upgrade manager to manage active upgrades and the data itself.
 class Game {
@@ -211,8 +268,10 @@ class Game {
 
 		this.BuildingManager = new BuildingManager(localDataFile.Buildings);
 		this.GlobalManager = new GlobalManager();
+		this.UpgradeManager = new UpgradeManager();
+		this.UIManager = new UIManager();
 
-		this.CreateInitialHtml();
+		this.UIManager.Init(this.BuildingManager);
 		const mainClickButton = document.getElementById("Increase");
 		mainClickButton.onclick = () => {this.GlobalManager.Click()};
 		return this;
@@ -236,52 +295,8 @@ class Game {
 		}
 	}
 	Draw(){
-		let cashDisplay = document.getElementById("Gold");
+		this.UIManager.Draw(this.BuildingManager, this.GlobalManager);
 		
-		cashDisplay.innerHTML = this.GlobalManager.cash.toFixed(2);
-		
-		let table = document.getElementById("BuildingTable");
-		this.BuildingManager.buildingTypes.forEach((buildingType) => {
-			let buildingRow = table.querySelector("#BuildingRow" + buildingType.name);
-			let buildingInstance = this.BuildingManager.GetInstanceByName(buildingType.name);
-
-			let buildingCount = buildingRow.querySelector(".BuildingCount");
-			buildingCount.innerHTML = buildingInstance.count;
-			let buildingValue = buildingRow.querySelector(".BuildingValue");
-			buildingValue.innerHTML = buildingInstance.multiplier * buildingInstance.count;
-			let buildingCost = buildingRow.querySelector(".BuildingCost");
-			buildingCost.innerHTML = parseFloat(buildingType.cost) * (buildingInstance.count + 1) * buildingInstance.costMultiplier;
-		});
-	}
-	CreateInitialHtml () {
-		//TODO: Am still a little sketch on building the elements like this.
-		let table = document.getElementById("BuildingTable");
-	
-		this.BuildingManager.buildingTypes.forEach((buildingType) => {
-			let tableRow = HtmlElementFactory.CreateTableRow("BuildingRow" + buildingType.name);
-			let buildingTypeName = HtmlElementFactory.CreateTableColumn(buildingType.name);
-			let buildingCount = HtmlElementFactory.CreateTableColumn("0");
-			buildingCount.classList.add("BuildingCount");
-			let buildingValue = HtmlElementFactory.CreateTableColumn("0");
-			buildingValue.classList.add("BuildingValue");
-			let buildingCost = HtmlElementFactory.CreateTableColumn("0");
-			buildingCost.classList.add("BuildingCost");
-			let buildingButton = HtmlElementFactory.CreateButton("buy" + buildingType.name,"Buy", () => {
-				this.BuyBuilding(buildingType.name);
-			});
-			buildingButton.classList.add("button");
-			buildingButton.setAttribute("disabled","");
-			let buildingActionContainer = HtmlElementFactory.CreateTableColumn("");
-			buildingActionContainer.classList.add("BuildingActionContainer");
-			buildingActionContainer.appendChild(buildingButton);
-	
-			tableRow.appendChild(buildingTypeName);
-			tableRow.appendChild(buildingCount);
-			tableRow.appendChild(buildingValue);
-			tableRow.appendChild(buildingCost);
-			tableRow.appendChild(buildingActionContainer);
-			table.querySelector("tbody").appendChild(tableRow);
-		});
 	}
 	ClickIncrease() {
 		this.GlobalManager.Click();
