@@ -1,5 +1,5 @@
-import { HtmlElementFactory } from "./HtmlElementFactory.js";
 
+import { UIManager } from "./ui.js";
 
 class Save{
 	constructor(file){
@@ -38,9 +38,10 @@ class GlobalManager {
 	constructor(){
 		this.cash = 0;
 		this.clickMultiplier = 1;
+		this.nextIncrease = 0;
 	}
 	Update(gameTime){
-
+		this.Increase(this.nextIncrease * (gameTime / 1000)); //TODO: Move this gametime calc to elapsed milliseconds from last frame
 	}
 	Increase(cash){
 		this.cash += cash;
@@ -84,6 +85,8 @@ class BuildingType {
 		this.cost = buildingDefinition.Cost;
 		this.prevBuildingThreshold = buildingDefinition.PrevBuildingThreshold;
 		this.costMultiplier = parseFloat(buildingDefinition.CostMultiplier);
+		this.multiplier = parseFloat(buildingDefinition.Multiplier);
+		this.cost = parseFloat(buildingDefinition.Cost);
 	}
 }
 
@@ -92,8 +95,9 @@ class BuildingInstance {
 	constructor(buildingDefinition){
 		this.name = buildingDefinition.name;
 		this.count = 0;
+		this.cost = buildingDefinition.cost;
 		this.costMultiplier = buildingDefinition.costMultiplier;
-		this.multiplier = 1;
+		this.multiplier = buildingDefinition.multiplier;
 	}
 	CalculateIncrease(){
 		return parseFloat(this.multiplier * this.count);
@@ -102,7 +106,7 @@ class BuildingInstance {
 		this.count += amount;
 	}
 	NextIncrementCost(){
-		return parseFloat((this.count + 1) * this.costMultiplier);
+		return parseFloat((this.count + 1) * (this.cost * this.costMultiplier));
 	}
 }
 
@@ -127,7 +131,7 @@ class BuildingManager {
 	GetInstanceByName(nameParam){
 		return this.buildingInstances.find(x => x.name == nameParam);
 	}
-	//private check enabled. I want the element stuff out of here. 
+	//private check enabled. I want the element stuff out of here. Also, move to cash amount as the prerequisite. 
 	#CheckEnabled(){
 		this.buildingTypes.forEach((buildingType, index) => {
 			let previousBuildingType = this.buildingTypes[index - 1];
@@ -148,17 +152,6 @@ class BuildingManager {
 					}
 				}
 			}
-			//Check if we are able to buy the building
-			let table = document.getElementById("BuildingTable");
-			let buildingRow = table.querySelector("#BuildingRow" + buildingType.name);
-			if (this.enabledBuildings.includes(buildingType.name)){
-				buildingRow.querySelector("#buy" + buildingType.name).disabled = false;
-			}
-			else{
-				buildingRow.querySelector("#buy" + buildingType.name).disabled = true;
-			}
-			//Disable the button if we can't afford it
-
 		});
 	}
 	GetIncreaseAmount(){
@@ -191,70 +184,6 @@ class BuildingManager {
 	}
 }
 
-class UIManager
-{
-	constructor(){
-
-	}
-	Init(BuildingManager){
-		this.GenerateBuildingsTable(BuildingManager);
-	}
-	GenerateBuildingsTable(BuildingManager){
-		//TODO:Still sketched tf out. Maybe react or some shit?
-		//TODO:Binding an event an issue. 
-		let table = document.getElementById("BuildingTable");
-	
-		BuildingManager.buildingTypes.forEach((buildingType) => {
-			let tableRow = HtmlElementFactory.CreateTableRow("BuildingRow" + buildingType.name);
-			let buildingTypeName = HtmlElementFactory.CreateTableColumn(buildingType.name);
-			let buildingCount = HtmlElementFactory.CreateTableColumn("0");
-			buildingCount.classList.add("BuildingCount");
-			let buildingValue = HtmlElementFactory.CreateTableColumn("0");
-			buildingValue.classList.add("BuildingValue");
-			let buildingCost = HtmlElementFactory.CreateTableColumn("0");
-			buildingCost.classList.add("BuildingCost");
-			let buildingButton = HtmlElementFactory.CreateButton("buy" + buildingType.name,"Buy", () => {
-				debugger;
-				BuildingManager.BuyBuilding(buildingType.name);
-			});
-			buildingButton.classList.add("button");
-			buildingButton.setAttribute("disabled","");
-			let buildingActionContainer = HtmlElementFactory.CreateTableColumn("");
-			buildingActionContainer.classList.add("BuildingActionContainer");
-			buildingActionContainer.appendChild(buildingButton);
-	
-			tableRow.appendChild(buildingTypeName);
-			tableRow.appendChild(buildingCount);
-			tableRow.appendChild(buildingValue);
-			tableRow.appendChild(buildingCost);
-			tableRow.appendChild(buildingActionContainer);
-			table.querySelector("tbody").appendChild(tableRow);
-		});
-	}
-	DrawScoreSection(GlobalManager){
-		let cashDisplay = document.getElementById("Gold");
-		cashDisplay.innerHTML = GlobalManager.cash.toFixed(2);
-	}
-	DrawBuildingTable(BuildingManager){
-		let table = document.getElementById("BuildingTable");
-		BuildingManager.buildingTypes.forEach((buildingType) => {
-			let buildingRow = table.querySelector("#BuildingRow" + buildingType.name);
-			let buildingInstance = BuildingManager.GetInstanceByName(buildingType.name);
-
-			let buildingCount = buildingRow.querySelector(".BuildingCount");
-			buildingCount.innerHTML = buildingInstance.count;
-			let buildingValue = buildingRow.querySelector(".BuildingValue");
-			buildingValue.innerHTML = buildingInstance.multiplier * buildingInstance.count;
-			let buildingCost = buildingRow.querySelector(".BuildingCost");
-			buildingCost.innerHTML = parseFloat(buildingType.cost) * (buildingInstance.count + 1) * buildingInstance.costMultiplier;
-		});
-	}
-	Draw(BuildingManager, GlobalManager){
-		this.DrawScoreSection(GlobalManager);
-		this.DrawBuildingTable(BuildingManager);
-	}
-} 
-
 //TODO: I think instead of loading the datafiles on the globals create a building and upgrade manager to manage active upgrades and the data itself.
 class Game {
 	constructor() {
@@ -272,31 +201,43 @@ class Game {
 		this.UIManager = new UIManager();
 
 		this.UIManager.Init(this.BuildingManager);
-		const mainClickButton = document.getElementById("Increase");
-		mainClickButton.onclick = () => {this.GlobalManager.Click()};
+
+		this.BindInitialEvents();
 		return this;
+	}
+	BindInitialEvents(){
+		this.BuildingManager.buildingTypes.forEach((buildingType) => {
+			let buildingBuyButton = document.getElementById("buy" + buildingType.name);
+			this.UIManager.BindEvent(buildingBuyButton, "click", () => {
+				this.BuyBuilding(buildingType.name);
+			}
+		);
+		});
+		this.UIManager.BindEvent(document.getElementById("Increase"),"click", () => {this.GlobalManager.Click()});
 	}
 	Run(){
 		setInterval(() => {
 			this.Update();
-			this.Draw();
 		}, this.frameTime);		
 	}
 	Update(){
 		this.elapsedSeconds += this.frameTime;
 
-		this.BuildingManager.Update(this.elapsedSeconds);
-		
-		let increaseAmount = this.BuildingManager.GetIncreaseAmount();
-		this.GlobalManager.Increase(increaseAmount / this.frameTime);
+		//Update Managers
+		this.BuildingManager.Update(this.frameTime);
+		this.GlobalManager.Update(this.frameTime);
 		
 		if (this.elapsedSeconds >= 1000){
 			this.elapsedSeconds = 0;
+			this.GlobalManager.nextIncrease = this.BuildingManager.GetIncreaseAmount();
 		}
-	}
-	Draw(){
-		this.UIManager.Draw(this.BuildingManager, this.GlobalManager);
 		
+		this.UpdateValues();
+	}
+	UpdateValues(){
+		this.UIManager.UpdateInnerHtmlById("Gold", this.GlobalManager.cash);
+		this.UIManager.DrawBuildingTable(this.BuildingManager);
+		this.UIManager.EnableValidBuildings(this.BuildingManager.enabledBuildings)
 	}
 	ClickIncrease() {
 		this.GlobalManager.Click();
@@ -304,9 +245,12 @@ class Game {
 	BuyBuilding (buildingTypeName) {
 		let buildingCost = this.BuildingManager.CostToIncrement(buildingTypeName);
 		let canBuybuilding = this.BuildingManager.CanBuyBuilding(buildingTypeName);
-		debugger;
 		if (canBuybuilding && this.GlobalManager.CanAfford(buildingCost)){
+			this.GlobalManager.Decrease(buildingCost);
 			this.BuildingManager.AddBuildingInstance(buildingTypeName);
+
+			//Refresh the increase
+			this.GlobalManager.nextIncrease = this.BuildingManager.GetIncreaseAmount();
 			return;
 		}	
 		console.log("Can't afford building");
@@ -336,9 +280,11 @@ class Game {
 	}
 }
 
-let game = new Game();
-await game.Init();
-game.Run();
+(async function() {
+	let game = new Game();
+	await game.Init();
+	game.Run();
+})();
 
 
 
