@@ -132,27 +132,24 @@ class BuildingManager {
 		return this.buildingInstances.find(x => x.name == nameParam);
 	}
 	//private check enabled. I want the element stuff out of here. Also, move to cash amount as the prerequisite. 
-	#CheckEnabled(){
-		this.buildingTypes.forEach((buildingType, index) => {
-			let previousBuildingType = this.buildingTypes[index - 1];
-			if (previousBuildingType !== undefined){
-				let previousBuildingInstance  = this.buildingInstances.find(x => x.name == previousBuildingType.name);
-				if (previousBuildingInstance.count >= previousBuildingType.prevBuildingThreshold){
-					try{
-						let add = false;
-						if (this.enabledBuildings.includes(buildingType.name) === false) {
-							add = true;
-						}
-						if (add){
-							this.enabledBuildings.push(buildingType.name);
-						}
-					}
-					catch(Exception){
-						console.log("Something went wrong when trying to check an enabled building.")
-					}
-				}
-			}
+	CheckEnabled(totalCash){
+		this.buildingInstances.forEach((buildingInstance) => {
+			let shouldEnableBuilding = buildingInstance.NextIncrementCost() < totalCash;
+			this.EnableBuilding(buildingInstance.name, shouldEnableBuilding);
 		});
+	}
+	EnableBuilding(name, enable = true){
+		if (enable){
+			if (this.enabledBuildings.includes(name) === false)
+			{
+				this.enabledBuildings.push(name);
+			}
+		}
+		else {
+			let idx = this.enabledBuildings.indexOf(name);
+			if (idx > -1)
+				this.enabledBuildings.splice(idx,1);
+		}
 	}
 	GetIncreaseAmount(){
 		let increaseAmount = 0;
@@ -167,7 +164,6 @@ class BuildingManager {
 		return building.NextIncrementCost();
 	}
 	Update(gameTime){
-		this.#CheckEnabled();
 	}
 	IsBuildingTypeEnabled(buildingType){
 		return this.enabledBuildings.find(x => x == buildingType) == buildingType;
@@ -214,6 +210,10 @@ class Game {
 		);
 		});
 		this.UIManager.BindEvent(document.getElementById("Increase"),"click", () => {this.GlobalManager.Click()});
+		this.UIManager.BindEvent(document.querySelectorAll("#navSection .tablinks"), "click", (evt) => {
+			let section = evt.target.dataset.section;
+			this.UIManager.OpenTab(evt, section);
+		});
 	}
 	Run(){
 		setInterval(() => {
@@ -223,9 +223,8 @@ class Game {
 	Update(){
 		this.elapsedSeconds += this.frameTime;
 
-		//Update Managers
-		this.BuildingManager.Update(this.frameTime);
 		this.GlobalManager.Update(this.frameTime);
+		this.BuildingManager.CheckEnabled(this.GlobalManager.cash);
 		
 		if (this.elapsedSeconds >= 1000){
 			this.elapsedSeconds = 0;

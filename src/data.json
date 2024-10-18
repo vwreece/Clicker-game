@@ -13,43 +13,37 @@
             "Name" : "Camp",
             "Cost" : 1,
             "CostMultiplier" : 1.1,
-            "Multiplier" : 1,
-            "PrevBuildingThreshold" : 20
+            "Multiplier" : 1
         },
         {
             "Name" : "Hamlet",
             "Cost" : 100,
             "CostMultiplier" : 1.1,
-            "Multiplier" : 10,
-            "PrevBuildingThreshold" : 20
+            "Multiplier" : 10
         },
         {
             "Name" : "Village",
             "Cost" : 2000,
             "CostMultiplier" : 1.1,
-            "Multiplier" : 50,
-            "PrevBuildingThreshold" : 20
+            "Multiplier" : 50
         },
         {
             "Name" : "Town",
             "Cost" : 25000,
             "CostMultiplier" : 1.1,
-            "Multiplier" : 120,
-            "PrevBuildingThreshold" : 20
+            "Multiplier" : 120
         },
         {
             "Name" : "City",
             "Cost" : 100000,
             "CostMultiplier" : 1.1,
-            "Multiplier" : 280,
-            "PrevBuildingThreshold" : 20
+            "Multiplier" : 280
         },
         {
             "Name" : "Metropolis",
             "Cost" : 1500000,
             "CostMultiplier" : 1.1,
-            "Multiplier" : 500,
-            "PrevBuildingThreshold" : 20
+            "Multiplier" : 500
         }
     ]
 }
